@@ -33,13 +33,18 @@ package net.rosien
 package object configz {
   import com.typesafe.config._
   import scalaz._
-  import Scalaz._
-  import Validation.Monad._
+  import syntax.validation._
+  import syntax.applicative._
   import Configz._
 
-  type Settings[A] = ValidationNEL[ConfigException, A]
+  type Settings[+A] = ValidationNel[ConfigException, A]
 
-  implicit val SettingsBind = implicitly[Bind[Settings]]
+  object SettingBind {
+    implicit val instance: Bind[Settings] = new Bind[Settings] {
+      def map[A, B](fa: Settings[A])(f: A => B) = fa map f
+      def bind[A, B](fa: Settings[A])(f: A => Settings[B]) = fa flatMap f
+    }
+  }
 
   /** Validate a Configz path.
    * @param f predicate function
@@ -50,24 +55,17 @@ package object configz {
     if (f(prop)) prop.successNel else new ConfigException.Generic(message).failNel[A]
 
   /** Additional methods on [[com.typesafe.config.Config]]. */
-  class ConfigOps(config: Config) {
-    def get[A](configz: Kleisli[Settings, Config, A]): ValidationNEL[ConfigException, A] = configz(config)
+  implicit class ConfigOps(val config: Config) extends AnyVal {
+    def get[A](configz: Kleisli[Settings, Config, A]): Settings[A] = configz(config)
   }
-
-  implicit def configToConfigOps(config: Config): ConfigOps = new ConfigOps(config)
-
-  /** The zero of a Config is the empty config. */
-  implicit val ConfigZero = zero(ConfigFactory.empty)
 
   /** Two Config instances are appended into a Config containing the first Config, then "falling back" 
    * on the second according to the withFallback() method.
    */
-  implicit val ConfigSemigroup: Semigroup[Config] = semigroup((a, b) => a.withFallback(b))
+  implicit val ConfigMonoid: Monoid[Config] = Monoid.instance(_ withFallback _, ConfigFactory.empty)
 
   /** Lift a String to a (typed) path into a config. */
-  case class StringOps(value: String) {
-    def path[A](implicit atPath: Configz[String => A]): Configz[A] = value.pure[Configz] <*> atPath
+  implicit class StringOps(val value: String) extends AnyVal {
+    def path[A](implicit atPath: Configz[String => A]): Configz[A] = value.point[Configz] <*> atPath
   }
-
-  implicit def stringToOps(value: String): StringOps = StringOps(value)
 }
