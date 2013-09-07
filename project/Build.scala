@@ -53,7 +53,7 @@ object Builds extends sbt.Build {
       description := "configz"
     )) aggregate(core) dependsOn(core)
 
-  val scalazVersion = "7.0.2"
+  val scalazVersion = "7.0.3"
 
   lazy val core = Project("configz-core", file("core"),
     settings = buildSettings ++ buildInfoSettings ++ Seq(
