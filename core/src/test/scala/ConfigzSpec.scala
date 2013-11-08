@@ -43,12 +43,11 @@ class ConfigzSpec extends Specification with Spec with ValidationMatchers with S
       val missing = "configz.asdf".path[String]
       val wrongType = "configz.bool".path[Int]
 
-      // https://github.com/typelevel/scalaz-specs2/pull/7
-      (missing tuple wrongType).settings(config) must beFailing/*.like {
+      (missing tuple wrongType).settings(config) must beFailing.like {
         case fails => fails.list must beLike {
           case (e1: ConfigException.Missing) :: (e2: ConfigException.WrongType) :: Nil => ok
         }
-      }*/
+      }
 
       (missing tuple wrongType).settings(config) match{
         case Failure(errors) =>
