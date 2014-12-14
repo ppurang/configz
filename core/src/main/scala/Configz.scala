@@ -4,6 +4,7 @@ import com.typesafe.config._
 import scalaz._
 import syntax.validation._
 import syntax.applicative._
+import scalaz.Validation.FlatMap._
 
 /** Reads settings from a [[com.typesafe.config.Config]]. */
 abstract sealed class Configz[A] {
@@ -24,15 +25,13 @@ object Configz {
     override def point[A](a: => A) = new Configz[A] {
       def settings(config: Config) =
         try a.success catch {
-          case e: ConfigException => e.failNel
-        }
+          case e: ConfigException => e.failureNel        }
     }
 
     override def ap[A, B](a: => Configz[A])(f: => Configz[A => B]) = new Configz[B] {
       def settings(config: Config) =
         try a.settings(config) <*> f.settings(config) catch {
-          case e: ConfigException => e.failNel
-        }
+          case e: ConfigException => e.failureNel        }
     }
 
     override def map[A, B](r: Configz[A])(f: A => B) = Configz{
@@ -46,15 +45,13 @@ object Configz {
         config.checkValid(reference, paths: _*)
         configz.settings(config)
       } catch {
-        case e: ConfigException => e.failNel
-      }
+        case e: ConfigException => e.failureNel      }
   }
 
   class ResolvedConfigz[A](configz: Configz[A]) extends Configz[A] {
     def settings(config: Config) =
       try config.resolve.get(configz) catch {
-        case e: ConfigException => e.failNel
-      }
+        case e: ConfigException => e.failureNel      }
   }
 
   /** Get a value at a path from a [[com.typesafe.config.Config]]. */

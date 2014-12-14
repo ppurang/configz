@@ -36,6 +36,7 @@ package object configz {
   import syntax.validation._
   import syntax.applicative._
   import Configz._
+  import scalaz.Validation.FlatMap._
 
   type Settings[+A] = ValidationNel[ConfigException, A]
 
@@ -52,7 +53,7 @@ package object configz {
    * @return validation function to be composed with Configz via >=> operator
    */
   def validate[A](f: A => Boolean, message: String): A => Settings[A] = prop =>
-    if (f(prop)) prop.successNel else new ConfigException.Generic(message).failNel[A]
+    if (f(prop)) prop.successNel else new ConfigException.Generic(message).failureNel[A]
 
   /** Additional methods on [[com.typesafe.config.Config]]. */
   implicit class ConfigOps(val config: Config) extends AnyVal {

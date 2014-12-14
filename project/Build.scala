@@ -7,8 +7,8 @@ object Builds extends sbt.Build {
 
   lazy val buildSettings = Defaults.defaultSettings ++ releaseSettings ++ Seq(
     organization := "net.rosien",
-    scalaVersion := "2.10.4",
-    scalacOptions ++= Seq("-deprecation", "-unchecked"),
+    scalaVersion := "2.11.4",
+    scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-language:_"),
     publishArtifact in Test := false,
     publishMavenStyle := true,
     publishTo <<= version { v: String =>
@@ -53,7 +53,7 @@ object Builds extends sbt.Build {
       description := "configz"
     )) aggregate(core) dependsOn(core)
 
-  val scalazVersion = "7.0.6"
+  val scalazVersion = "7.1.0"
 
   lazy val core = Project("configz-core", file("core"),
     settings = buildSettings ++ buildInfoSettings ++ Seq(
@@ -64,7 +64,7 @@ object Builds extends sbt.Build {
         "com.typesafe"   % "config"                     % "1.2.1",
         "org.scalaz"    %% "scalaz-core"                % scalazVersion,
         "org.scalaz"    %% "scalaz-scalacheck-binding"  % scalazVersion,
-        "org.typelevel" %% "scalaz-specs2"              % "0.1.5"  % "test"
+        "org.typelevel" %% "scalaz-specs2"              % "0.3.0"  % "test"
       )
     ))
 }
